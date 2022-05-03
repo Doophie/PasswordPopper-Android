@@ -1,5 +1,6 @@
 package ca.doophie.passwordpopper.web
 
+import android.util.Base64
 import android.util.Log
 import ca.doophie.passwordpopper.MainActivity
 import ca.doophie.passwordpopper.crypto.AESEncrypt
@@ -48,7 +49,7 @@ class PythonServerConnections(
             try {
                 val out = DataOutputStream(socket.getOutputStream())
 
-                out.write(aesEncryptor.encrypt(key, data))
+                out.write(Base64.encode(aesEncryptor.encrypt(key, data), Base64.NO_WRAP))
 
                 out.flush()
             } catch (e: Exception) {
