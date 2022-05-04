@@ -19,7 +19,8 @@ import java.nio.charset.Charset
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private var connectionHandler: PythonServerConnections? = null
+
+    var connectionHandler: PythonServerConnections? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,7 +41,7 @@ class MainActivity : AppCompatActivity() {
     private fun connectToPythonServer() {
         var qrCodeFrag: QRCodeReaderFragment? = null
         qrCodeFrag = QRCodeReaderFragment { scannedValue ->
-            binding.connectionButton.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.holo_green_dark))
+            binding.connectionButton.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.holo_green_light))
             binding.isConnectedText.text = getString(R.string.connected)
 
             // handle scanned value
@@ -51,7 +52,7 @@ class MainActivity : AppCompatActivity() {
                 Base64.decode(splitValue[2], Base64.NO_WRAP)
             )
 
-            onBackPressed()
+            supportFragmentManager.popBackStack("AllCreds", 0)
         }
 
         supportFragmentManager.beginTransaction()

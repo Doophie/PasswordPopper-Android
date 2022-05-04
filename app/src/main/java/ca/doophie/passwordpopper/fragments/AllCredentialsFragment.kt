@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
+import ca.doophie.passwordpopper.MainActivity
 import ca.doophie.passwordpopper.R
 import ca.doophie.passwordpopper.adapters.AllCredentialsAdapter
 import ca.doophie.passwordpopper.data.Credential
@@ -40,10 +41,18 @@ class AllCredentialsFragment : Fragment() {
         credentialsAdapter = AllCredentialsAdapter()
 
         credentialsAdapter.onItemSelected { item, toSend ->
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.main_frame_layout, CredentialDetailsFragment.withCredential(item))
-                .addToBackStack("ViewDetails")
-                .commit()
+            if (toSend) {
+                (activity as? MainActivity?)?.connectionHandler?.let { ch ->
+                    item.fields.forEach {
+                        ch.sendData(it.second)
+                    }
+                }
+            } else {
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.main_frame_layout, CredentialDetailsFragment.withCredential(item))
+                    .addToBackStack("ViewDetails")
+                    .commit()
+            }
         }
 
         binding.allCredentialRecycler.adapter = credentialsAdapter

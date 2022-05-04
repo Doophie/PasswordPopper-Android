@@ -3,6 +3,7 @@ package ca.doophie.passwordpopper.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -49,6 +50,10 @@ class AllCredentialsAdapter: RecyclerView.Adapter<AllCredentialsAdapter.ViewHold
         holder.setCredential(allCredentials[position])
         holder.itemView.setOnClickListener {
             onSelectionCallback(allCredentials[position], false)
+        }
+
+        holder.itemView.findViewById<View>(R.id.send_value_button).setOnClickListener {
+            onSelectionCallback(allCredentials[position], true)
         }
     }
 

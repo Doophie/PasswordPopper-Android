@@ -12,6 +12,8 @@ import ca.doophie.passwordpopper.adapters.EditCredentialDetailsAdapter
 import ca.doophie.passwordpopper.data.Credential
 import ca.doophie.passwordpopper.data.CredentialDatabase
 import ca.doophie.passwordpopper.databinding.FragmentEditCredentialDetailsBinding
+import ca.doophie.passwordpopper.extensions.getIconURL
+import com.squareup.picasso.Picasso
 
 class EditCredentialDetailsFragment : Fragment() {
 
@@ -50,8 +52,28 @@ class EditCredentialDetailsFragment : Fragment() {
             adapter.addNewField()
         }
 
+        binding.titleEditText.setText(credential.name)
+        binding.urlEditText.setText(credential.url)
+
+        binding.urlEditText.onFocusChangeListener = object : View.OnFocusChangeListener {
+            override fun onFocusChange(p0: View?, hasFocus: Boolean) {
+                if (!hasFocus) {
+                    credential.url = binding.urlEditText.text.toString()
+                    credential.url?.let { url ->
+                        Picasso.with(requireContext()).load(url.getIconURL()).into(binding.iconImageViewEdit)
+                    }
+                }
+            }
+        }
+
+        credential.url?.let { url ->
+            Picasso.with(requireContext()).load(url.getIconURL()).into(binding.iconImageViewEdit)
+        }
+
         binding.editableFieldsRecycler.layoutManager = LinearLayoutManager(requireContext())
         binding.editableFieldsRecycler.adapter = adapter
+
+        adapter.setFields(credential.fields)
 
         binding.saveButton.setOnClickListener {
             saveCredential()
@@ -81,6 +103,6 @@ class EditCredentialDetailsFragment : Fragment() {
             database?.credentialDao()?.delete(credential)
         }.start()
 
-        activity?.onBackPressed()
+        parentFragmentManager.popBackStack("AllCreds", 0)
     }
 }
