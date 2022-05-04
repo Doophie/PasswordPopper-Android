@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">PasswordPopper</string>
+    <string name="not_connected">Not Connected</string>
+    <string name="connect_to_python_server">Connect to python server</string>
+    <string name="scan_qr_code_to_connect">Scan QR Code to connect</string>
+    <string name="connected">Connected</string>
+    <string name="title">Title</string>
+    <string name="credential_title">Credential Title</string>
+    <string name="credential_url">Credential URL (Optional)</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="value">Value</string>
+    <string name="edit">Edit</string>
+    <string name="url">URL</string>
+
+    <string-array name="completion_options">
+        <item>Enter</item>
+        <item>Tab</item>
+        <item>Nothing</item>
+    </string-array>
 </resources>

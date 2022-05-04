@@ -51,6 +51,8 @@ class PythonServerConnections(
 
                 out.write(Base64.encode(aesEncryptor.encrypt(key, data), Base64.NO_WRAP))
 
+                Log.d(TAG, "Sent data $data")
+
                 out.flush()
             } catch (e: Exception) {
                 Log.e(TAG, "Send Data Error: $e")

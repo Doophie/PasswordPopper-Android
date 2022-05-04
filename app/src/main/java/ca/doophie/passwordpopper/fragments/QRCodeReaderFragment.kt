@@ -55,18 +55,14 @@ class QRCodeReaderFragment(
         } else {
             setupControls()
         }
-
-        val aniSlide: Animation = AnimationUtils.loadAnimation(requireContext(), R.anim.scan_animation)
-        binding.barcodeLine.startAnimation(aniSlide)
     }
-
 
     private fun setupControls() {
         barcodeDetector =
             BarcodeDetector.Builder(requireActivity()).setBarcodeFormats(Barcode.ALL_FORMATS).build()
 
         cameraSource = CameraSource.Builder(requireActivity(), barcodeDetector)
-            .setRequestedPreviewSize(1920, 1080)
+            .setRequestedPreviewSize(1080, 1080)
             .setAutoFocusEnabled(true) //you should add this feature
             .build()
 
@@ -116,8 +112,6 @@ class QRCodeReaderFragment(
                         cameraSource.stop()
                         onScannedValue(scannedValue)
                     }
-                } else {
-                    Log.d(TAG, "Barcodes not found")
                 }
             }
         })
