@@ -1,16 +1,17 @@
 package ca.doophie.passwordpopper.fragments
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.room.Room
 import ca.doophie.passwordpopper.R
 import ca.doophie.passwordpopper.adapters.CredentialDetailsAdapter
 import ca.doophie.passwordpopper.data.Credential
+import ca.doophie.passwordpopper.data.CredentialDatabase
 import ca.doophie.passwordpopper.databinding.FragmentCredentialDetailsBinding
 import ca.doophie.passwordpopper.extensions.getIconURL
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.squareup.picasso.Picasso
 
 class CredentialDetailsFragment: Fragment() {
@@ -36,7 +37,28 @@ class CredentialDetailsFragment: Fragment() {
     ): View? {
         binding = FragmentCredentialDetailsBinding.inflate(inflater)
 
+        setHasOptionsMenu(true)
+
         return binding.root
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+
+        inflater.inflate(R.menu.menu_credential_details, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.edit_button -> {
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.main_frame_layout, EditCredentialDetailsFragment.withCredential(credential))
+                    .addToBackStack("EditCred")
+                    .commit()
+            }
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -53,12 +75,5 @@ class CredentialDetailsFragment: Fragment() {
         binding.editableFieldsRecycler.adapter = adapter
 
         adapter.setCredential(credential)
-
-        binding.editCredentialButton.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.main_frame_layout, EditCredentialDetailsFragment.withCredential(credential))
-                .addToBackStack("EditCred")
-                .commit()
-        }
     }
 }

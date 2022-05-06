@@ -11,10 +11,13 @@ import ca.doophie.passwordpopper.databinding.ActivityMainBinding
 import ca.doophie.passwordpopper.fragments.AllCredentialsFragment
 import ca.doophie.passwordpopper.fragments.QRCodeReaderFragment
 import ca.doophie.passwordpopper.web.PythonServerConnections
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.Socket
 import java.nio.charset.Charset
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -41,8 +44,6 @@ class MainActivity : AppCompatActivity() {
     private fun connectToPythonServer() {
         var qrCodeFrag: QRCodeReaderFragment? = null
         qrCodeFrag = QRCodeReaderFragment { scannedValue ->
-            binding.connectionButton.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.holo_green_light))
-            binding.isConnectedText.text = getString(R.string.connected)
 
             // handle scanned value
             val splitValue = scannedValue.split("&")
@@ -52,6 +53,10 @@ class MainActivity : AppCompatActivity() {
                 Base64.decode(splitValue[2], Base64.NO_WRAP)
             )
 
+            connectionHandler?.connectToPythonServer { success ->
+                onConnectionResult(success)
+            }
+
             supportFragmentManager.popBackStack("AllCreds", 0)
         }
 
@@ -59,6 +64,30 @@ class MainActivity : AppCompatActivity() {
             .replace(R.id.main_frame_layout, qrCodeFrag)
             .addToBackStack("QRCode")
             .commit()
+    }
+
+    private fun onConnectionResult(success: Boolean) {
+        if (success) {
+            testContinuedConnection()
+            binding.connectionButton.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.holo_green_light))
+            val connectionString = "${getString(R.string.connected)} to ${connectionHandler!!.ip}:${connectionHandler!!.port}"
+            binding.isConnectedText.text = connectionString
+        } else {
+            binding.connectionButton.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+            binding.isConnectedText.text = getString(R.string.not_connected)
+        }
+    }
+
+    private fun testContinuedConnection() {
+        GlobalScope.async {
+            Timer("Connection test", false).schedule(object : TimerTask() {
+                override fun run() {
+                    connectionHandler?.testConnection { success ->
+                        onConnectionResult(success)
+                    }
+                }
+            },5000)
+        }
     }
 
 }

@@ -1,9 +1,8 @@
 package ca.doophie.passwordpopper.fragments
 
+import android.app.AlertDialog
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.room.Room
@@ -13,6 +12,7 @@ import ca.doophie.passwordpopper.data.Credential
 import ca.doophie.passwordpopper.data.CredentialDatabase
 import ca.doophie.passwordpopper.databinding.FragmentEditCredentialDetailsBinding
 import ca.doophie.passwordpopper.extensions.getIconURL
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.squareup.picasso.Picasso
 
 class EditCredentialDetailsFragment : Fragment() {
@@ -42,7 +42,24 @@ class EditCredentialDetailsFragment : Fragment() {
     ): View? {
         binding = FragmentEditCredentialDetailsBinding.inflate(inflater)
 
+        setHasOptionsMenu(true)
+
         return binding.root
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+
+        inflater.inflate(R.menu.menu_credential_edit_details, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.save_button -> saveCredential()
+            R.id.delete_button -> deleteCredential()
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -75,14 +92,6 @@ class EditCredentialDetailsFragment : Fragment() {
 
         adapter.setFields(credential.fields)
 
-        binding.saveButton.setOnClickListener {
-            saveCredential()
-        }
-
-        binding.deleteButton.setOnClickListener {
-            deleteCredential()
-        }
-
         database = Room.databaseBuilder(requireContext(), CredentialDatabase::class.java, "creds").build()
     }
 
@@ -99,10 +108,19 @@ class EditCredentialDetailsFragment : Fragment() {
     }
 
     private fun deleteCredential() {
-        Thread {
-            database?.credentialDao()?.delete(credential)
-        }.start()
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Delete Credential")
+            .setMessage("Are you sure you wish to delete ${credential.name}? You will not be able to recover it.")
+            .setPositiveButton("Delete") { _, _ ->
+                Thread {
+                    database?.credentialDao()?.delete(credential)
+                }.start()
 
-        parentFragmentManager.popBackStack("AllCreds", 0)
+                parentFragmentManager.popBackStack("AllCreds", 0)
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 }

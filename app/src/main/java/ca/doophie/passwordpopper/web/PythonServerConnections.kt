@@ -9,6 +9,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
+import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.InputStreamReader
 import java.lang.Exception
@@ -30,16 +31,41 @@ class PythonServerConnections(
 
     private lateinit var socket: Socket
 
-    init {
-        connectToPythonServer()
-    }
-
-    private fun connectToPythonServer() {
+    fun connectToPythonServer(complete: (Boolean)->Unit) {
         GlobalScope.launch {
             try {
                 socket = Socket(ip, port)
+
+                testConnection(complete)
             } catch (e: Exception) {
                 Log.e(TAG, "Network Error $e")
+                complete(false)
+            }
+        }
+    }
+
+    fun testConnection(confirmCallback: (Boolean)->Unit) {
+        GlobalScope.launch {
+            try {
+                val out = DataOutputStream(socket.getOutputStream())
+
+                out.write("ping-test".toByteArray(Charset.forName("utf-8")))
+
+                Log.d(TAG, "Sent ping test")
+
+                out.flush()
+
+                val inS = DataInputStream(socket.getInputStream())
+
+                val readBytes = ByteArray(1024)
+                val r = inS.read(readBytes)
+
+                Log.d(TAG, "Got ${String(readBytes, 0, r, Charset.forName("utf-8"))}")
+
+                confirmCallback(String(readBytes, 0, r, Charset.forName("utf-8")) == "ack")
+            } catch (e: Exception) {
+                Log.e(TAG, "Send Ping Error: $e")
+                confirmCallback(false)
             }
         }
     }

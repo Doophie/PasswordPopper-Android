@@ -37,7 +37,7 @@ class AllCredentialsFragment : Fragment() {
         binding.addCredentialFab.setOnClickListener {
             addNewCredential()
         }
-
+         
         credentialsAdapter = AllCredentialsAdapter()
 
         credentialsAdapter.onItemSelected { item, toSend ->
