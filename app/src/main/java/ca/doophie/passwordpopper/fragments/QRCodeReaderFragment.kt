@@ -22,13 +22,19 @@ import com.google.android.gms.vision.barcode.Barcode
 import com.google.android.gms.vision.barcode.BarcodeDetector
 import java.io.IOException
 
-class QRCodeReaderFragment(
-    private val onScannedValue: (String)->Unit
-): Fragment() {
+class QRCodeReaderFragment: Fragment() {
 
     companion object {
         private const val TAG = "QRCodeReaderFragment"
+
+        fun withCallback(onScannedValue: (String) -> Unit): QRCodeReaderFragment {
+            val frag = QRCodeReaderFragment()
+            frag.onScannedValue = onScannedValue
+            return frag
+        }
     }
+
+    private var onScannedValue: (String)->Unit = {}
 
     private lateinit var binding: FragmentQrCodeReaderBinding
 

@@ -7,19 +7,27 @@ import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import androidx.core.content.ContextCompat
+import ca.doophie.passwordpopper.data.ConnectionParam
+import ca.doophie.passwordpopper.data.DatabaseHandler
 import ca.doophie.passwordpopper.databinding.ActivityMainBinding
 import ca.doophie.passwordpopper.fragments.AllCredentialsFragment
 import ca.doophie.passwordpopper.fragments.QRCodeReaderFragment
 import ca.doophie.passwordpopper.web.PythonServerConnections
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.Exception
 import java.net.Socket
 import java.nio.charset.Charset
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        private const val TAG = "MainActivity"
+    }
 
     private lateinit var binding: ActivityMainBinding
 
@@ -31,6 +39,22 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
+        DatabaseHandler.init(this)
+
+        GlobalScope.launch {
+            DatabaseHandler.instance?.connectionParamDao()?.getAll()?.forEach { connectionParam ->
+                try {
+                    connectToPythonServer(
+                        connectionParam.connectionIP,
+                        connectionParam.port,
+                        connectionParam.key
+                    )
+                } catch (e: Exception) {
+                    Log.d(TAG, "Failed connection to ${connectionParam.connectionIP}")
+                }
+            }
+        }
+
         supportFragmentManager.beginTransaction()
             .replace(R.id.main_frame_layout, AllCredentialsFragment())
             .addToBackStack("AllCreds")
@@ -41,23 +65,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun connectToPythonServer() {
-        var qrCodeFrag: QRCodeReaderFragment? = null
-        qrCodeFrag = QRCodeReaderFragment { scannedValue ->
+    override fun onResume() {
+        super.onResume()
 
-            // handle scanned value
-            val splitValue = scannedValue.split("&")
-            connectionHandler = PythonServerConnections(
-                splitValue[0],
-                splitValue[1].toInt(),
-                Base64.decode(splitValue[2], Base64.NO_WRAP)
-            )
+        testContinuedConnection()
+    }
 
-            connectionHandler?.connectToPythonServer { success ->
-                onConnectionResult(success)
+    private fun connectToPythonServer(ip: String, port: Int, b64Key: String) {
+        // handle scanned value
+        connectionHandler = PythonServerConnections(ip, port, Base64.decode(b64Key, Base64.NO_WRAP))
+
+        connectionHandler?.connectToPythonServer { success ->
+            if (success) {
+                DatabaseHandler.instance?.connectionParamDao()?.insertAll(ConnectionParam(
+                    ip,
+                    port,
+                    b64Key
+                ))
             }
 
-            supportFragmentManager.popBackStack("AllCreds", 0)
+            onConnectionResult(success)
+        }
+
+        supportFragmentManager.popBackStack("AllCreds", 0)
+    }
+
+    private fun connectToPythonServer() {
+        val qrCodeFrag = QRCodeReaderFragment.withCallback { scannedValue ->
+            val splitValue = scannedValue.split("&")
+
+            connectToPythonServer(splitValue[0], splitValue[1].toInt(), splitValue[2])
         }
 
         supportFragmentManager.beginTransaction()
@@ -66,15 +103,23 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
+    private var failCount = 0
+
     private fun onConnectionResult(success: Boolean) {
         if (success) {
+            failCount = 0
             testContinuedConnection()
             binding.connectionButton.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.holo_green_light))
             val connectionString = "${getString(R.string.connected)} to ${connectionHandler!!.ip}:${connectionHandler!!.port}"
             binding.isConnectedText.text = connectionString
         } else {
-            binding.connectionButton.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.holo_red_dark))
-            binding.isConnectedText.text = getString(R.string.not_connected)
+            if (failCount > 4) {
+                binding.connectionButton.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.holo_red_dark))
+                binding.isConnectedText.text = getString(R.string.not_connected)
+            } else {
+                failCount += 1
+                testContinuedConnection()
+            }
         }
     }
 

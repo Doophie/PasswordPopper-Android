@@ -1,5 +1,7 @@
 package ca.doophie.passwordpopper.crypto
 
+import java.nio.charset.Charset
+import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
@@ -21,4 +23,16 @@ class AESEncrypt {
 
         return cipher.doFinal(plainTextB)
     }
+
+    fun decrypt(key: ByteArray, cipherTextB: ByteArray): String {
+        val originalKey: SecretKey = SecretKeySpec(key, 0, key.size, "AES")
+
+        val ivParams = IvParameterSpec(iv)
+
+        val plain = Cipher.getInstance("AES/CBC/PKCS5PADDING")
+        plain.init(Cipher.DECRYPT_MODE, originalKey, ivParams)
+
+        return plain.doFinal(cipherTextB).toString(Charsets.UTF_8)
+    }
+
 }

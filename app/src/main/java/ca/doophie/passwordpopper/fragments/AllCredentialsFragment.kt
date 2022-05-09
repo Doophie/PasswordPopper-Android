@@ -14,6 +14,7 @@ import ca.doophie.passwordpopper.R
 import ca.doophie.passwordpopper.adapters.AllCredentialsAdapter
 import ca.doophie.passwordpopper.data.Credential
 import ca.doophie.passwordpopper.data.CredentialDatabase
+import ca.doophie.passwordpopper.data.DatabaseHandler
 import ca.doophie.passwordpopper.databinding.FragmentAllCredentialsBinding
 
 class AllCredentialsFragment : Fragment() {
@@ -59,7 +60,7 @@ class AllCredentialsFragment : Fragment() {
         binding.allCredentialRecycler.layoutManager = LinearLayoutManager(requireContext())
 
         Thread {
-            val db = Room.databaseBuilder(requireContext(), CredentialDatabase::class.java, "creds").build()
+            val db = DatabaseHandler.instance ?: return@Thread
 
             val credentialsDao = db.credentialDao()
             val allCredentials = credentialsDao.getAll()
